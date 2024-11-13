@@ -1,7 +1,12 @@
 
-# install and load Refsplitr
+# Prepare list of coauthors / affiliations required by NSF COA spreadsheet
+# using a file of article records downloaded from the Web of Science/
 
-# https://docs.ropensci.org/refsplitr/
+# load an install libraries -----------------------------------------------
+
+# refsplitr (https://docs.ropensci.org/refsplitr/) not on cran
+# to install uncomment the the following lines of code: 
+
 # install.packages("devtools")
 # devtools::install_github("ropensci/refsplitr")
 
@@ -9,6 +14,9 @@ require(refsplitr)
 require(tidyr)
 require(dplyr)
 require(stringr)
+
+
+# load and process WoS file -----------------------------------------------
 
 # load the Web of Science records into a dataframe
 # include_all=TRUE keeps the WOS column with email address
@@ -20,13 +28,17 @@ dat1 <- references_read("savedrecs.txt",
 dat2 <- authors_clean(dat1)
 
 # you can check the preliminary results of the disambiguation algorithm here
-dat2$review
-dat2$prelim
+# dat2$review
+# dat2$prelim
 
-# after reviewing disambiguation, merge any necessary corrections
-dat3 <- authors_refine(dat2$review, dat2$prelim)
+# this line is required, even if you don't manually review and correct the 
+# author disambiguation. Correction of disambiguation unlikely 
+# with smaller author lists, e.g., single author and collaborators. 
 
-# NSF COA FORMAT
+dat2 <- authors_refine(dat2$review, dat2$prelim)
+
+
+
 
   ## Table 4: List names as last name, first name, middle initial, and 
   ## provide organizational affiliations, if known, for the following:
@@ -39,19 +51,30 @@ today_yr <- as.numeric(format(Sys.time(), "%Y"))
 # Subtract 48 months (4 years) using the `seq` function
 yr_48_ago <- today_yr-4
 # Print the result
-print(yr_48_ago)
+# print(yr_48_ago)
 
+
+# reduce list to prior 4 years  -------------------------------------------
 
 # create a copy of the data to trim down to 48 months ago
-dat4 <- dat3 
-names(dat4)
-# convert publication yr to a number and 
-# filter dataframe to only the papers 48 months ago
-dat4 <- dat4 %>% 
-  mutate(PY = as.numeric(PY)) %>% 
-  filter(PY >= yr_48_ago)
+# dat2 <- dat3 
 
-dat4 <- dat4 %>% select(author_name,
+# convert publication yr to a number and 
+# filter dataframe to only the papers within last 4 years 
+# and then to the distinct coauthors 
+# (distinct(group_id) works because if same author 
+# coauthor on multiple papers in last 4 years it will only keep
+# the first one, which will be the most recent (sort desc(PY))
+
+dat2 <- dat2 %>% 
+  mutate(PY = as.numeric(PY)) %>% 
+  filter(PY >= yr_48_ago) %>% 
+  arrange(desc(PY)) %>% 
+  distinct(groupID,.keep_all = TRUE)
+
+
+
+dat2 <- dat2 %>% select(author_name,
                         university,
                         city,
                         state,
@@ -60,8 +83,8 @@ dat4 <- dat4 %>% select(author_name,
                         OI,
                         PY)
 
-
-dat4 <- dat4 %>% 
+# convert refsplitr output to NSF COA format ------------------------------
+dat2 <- dat2 %>% 
   separate_wider_delim(author_name,
                        delim = ",", names = c("last_name", "first_name"),
                        too_many = "merge"
@@ -74,47 +97,48 @@ dat4 <- dat4 %>%
                        too_few = c("align_start"),
                        too_many = "merge") 
 
-# made these in stringr with base r to make it easier 
-# for users to decide what to include 
-dat4$university <- str_to_title(dat4$university)
+# made these with base r to make it easier for users to 
+# decide what to include in output
 
-dat4$city <- str_to_title(dat4$city)
+# Capitalize organization name
+dat2$university <- str_to_title(dat2$university)
 
-dat4$country <- str_to_title(dat4$country)
-dat4 <- dat4 %>% mutate(country=
+# Capitalize city name
+dat2$city <- str_to_title(dat2$city)
+
+# Capitalize country name (except USA as all caps)
+dat2$country <- str_to_title(dat2$country)
+dat2 <- dat2 %>% mutate(country=
                           case_when(
                             country == "Usa" ~ "USA",
                             .default = as.character(country))
                         )
+# Capitalize organizations's department if one given
+dat2$department <- str_to_title(dat2$department)
 
-dat4$department <- str_to_title(dat4$department)
-
-# Some in state are full name of state or province
-
-dat4$state <- ifelse(nchar(dat4$state) == 2, 
-                     str_to_upper(dat4$state),  # Uppercase for 2-character states
-                     str_to_title(dat4$state))  # Title case for others
+# Some in "state" are full name of state or province
+dat2$state <- ifelse(nchar(dat2$state) == 2, 
+                     str_to_upper(dat2$state),  # Uppercase for 2-character states
+                     str_to_title(dat2$state))  # Title case for others
 
 
-# last active is year
+# "last active" is year of paper
 
-dat4$last_active <- dat4$PY
-
+dat2$last_active <- dat2$PY
 
 # rename "university" -> "org_affil"
 
-dat4 <- dat4 %>% rename("org_affil"="university")
+dat2 <- dat2 %>% rename("org_affil"="university")
 
-# filter to most recent
+# arrange and save as csv 
 
-dat5 <- dat4 %>% 
-  group_by(last_name,first_name) %>% 
-  arrange(desc(PY)) %>% 
-  slice_head(n=1)
+dat2 <- dat2 %>% 
+  arrange(last_name, first_name) %>% 
+  arrange(desc(PY))
   
 
 
 # save the csv
 
-write.csv(dat5,"./output/nsf_coauthors")
+write.csv(dat2,"nsf_coauthors.csv")
 
