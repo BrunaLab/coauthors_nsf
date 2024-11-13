@@ -30,7 +30,7 @@ All but [`refsplitr`](https://docs.ropensci.org/refsplitr/) are available on CRA
 
 ## Advantages
 
-1. You curate your own list of articles from the Web of Science. (Pulling records from databases by author name can miss articles (e.g., if they search by author name but you are part of an author group)). 
+1. You curate your own list of articles from the Web of Science. (Pulling records from databases by author name can miss articles (e.g., if they search by author name but you are part of an author group). 
 
 ## Limitations
 
