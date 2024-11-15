@@ -134,8 +134,12 @@ dat2 <- dat2 %>% rename("org_affil"="university")
 
 dat2 <- dat2 %>% 
   arrange(last_name, first_name) %>% 
-  arrange(desc(PY))
-  
+  mutate(name=paste(last_name, first_name, sep=", ")) %>% 
+  mutate(org_affil_2=(paste(org_affil, " (",country,") ",sep=""))) %>% 
+  arrange(desc(PY)) %>% 
+  relocate(c(name,org_affil_2,department,last_active),.before=1) %>% 
+  replace_na(list(org_affil_2="-",department="-"))
+
 
 
 # save the csv
