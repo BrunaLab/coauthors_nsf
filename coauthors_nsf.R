@@ -14,7 +14,7 @@ require(refsplitr)
 require(tidyr)
 require(dplyr)
 require(stringr)
-
+library(readr)
 
 # load and process WoS file -----------------------------------------------
 
@@ -23,8 +23,10 @@ require(stringr)
 dat1 <- references_read("savedrecs.txt", 
                         dir = FALSE,
                         include_all=FALSE)  %>% 
-  relocate(refID=.before=1)
+  relocate(refID,.before=1)
 
+
+write_csv(dat1,"all_articles.csv")
 # disambiguate author names and parse author address
 dat2 <- authors_clean(dat1)
 

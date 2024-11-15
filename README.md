@@ -26,7 +26,10 @@ All but [`refsplitr`](https://docs.ropensci.org/refsplitr/) are available on CRA
 
 3. open and run the `coauthors_nsf.R` script. If you wish to exclude any articles, you can open the code and indicate which ones using the `refID` for the article (available in the `dat1` dataframe).
 
-4. your records will be saved as `nsf_coauthors.csv` in the output folder. In addition to the columns required by NSF, it includes columns with optional data they suggest you may include. 
+4. The code output is 2 .csv files: 
+
+- `all_articles.csv`: a .csv file of all your articles
+- `nsf_coauthors.csv`: a .csv file with all co-authors for articles published in the last 4 years. In addition to the columns required by NSF, it includes columns with optional data they suggest you may want to include. 
 
 ## Advantages
 
