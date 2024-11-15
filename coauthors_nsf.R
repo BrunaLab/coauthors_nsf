@@ -22,7 +22,8 @@ require(stringr)
 # include_all=TRUE keeps the WOS column with email address
 dat1 <- references_read("savedrecs.txt", 
                         dir = FALSE,
-                        include_all=FALSE)  
+                        include_all=FALSE)  %>% 
+  relocate(refID=.before=1)
 
 # disambiguate author names and parse author address
 dat2 <- authors_clean(dat1)
@@ -38,6 +39,15 @@ dat2 <- authors_clean(dat1)
 dat2 <- authors_refine(dat2$review, dat2$prelim)
 
 
+# exclude specific articles -----------------------------------------------
+
+# for group papers with many authors you may wish to only report the 1st or
+# primary authors as C or A. You can exclude those articles here to avoid 
+# all the other coauthors being added to the list. 
+
+# dat2<-dat2 %>% 
+#   filter(refID!="7") %>% 
+#   filter(refID!="4")
 
 
   ## Table 4: List names as last name, first name, middle initial, and 
