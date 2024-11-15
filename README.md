@@ -24,7 +24,7 @@ All but [`refsplitr`](https://docs.ropensci.org/refsplitr/) are available on CRA
 
 2. Save the downloaded records in the root directory as `savedrecs.txt` or `savedrecs.ciw`. (you can save them with another name, but then you have to change the file name in the script).
 
-3. open and run the `coauthors_nsf.R` script.
+3. open and run the `coauthors_nsf.R` script. If you wish to exclude any articles, you can open the code and indicate which ones using the `refID` for the article (available in the `dat1` dataframe).
 
 4. your records will be saved as `nsf_coauthors.csv` in the output folder. In addition to the columns required by NSF, it includes columns with optional data they suggest you may include. 
 
