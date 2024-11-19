@@ -60,6 +60,8 @@ dat2 <- authors_refine(dat2$review, dat2$prelim)
 # calculate the year 48 months ago
 # The month/year
 today_yr <- as.numeric(format(Sys.time(), "%Y"))
+today_m <- as.numeric(format(Sys.time(), "%m"))
+today_d <- as.numeric(format(Sys.time(), "%d"))
 # Subtract 48 months (4 years) using the `seq` function
 yr_48_ago <- today_yr-4
 # Print the result
@@ -85,6 +87,16 @@ dat2 <- dat2 %>%
   distinct(groupID,.keep_all = TRUE)
 
 
+# put the date in d/m/yyyy format required by NSF
+
+dat2 <- dat2 %>% 
+  mutate(today_m=today_m) %>% 
+  mutate(today_d=today_d) %>% 
+  mutate(today_yr=today_yr) %>% 
+  mutate(last_active = ifelse(PY == today_yr, paste(today_m,today_d,today_yr,sep="/"),
+                              paste(12,31,PY,sep="/")))
+
+           
 
 dat2 <- dat2 %>% select(author_name,
                         university,
@@ -93,7 +105,7 @@ dat2 <- dat2 %>% select(author_name,
                         country,
                         department,
                         OI,
-                        PY)
+                        last_active)
 
 # convert refsplitr output to NSF COA format ------------------------------
 dat2 <- dat2 %>% 
@@ -134,9 +146,6 @@ dat2$state <- ifelse(nchar(dat2$state) == 2,
                      str_to_title(dat2$state))  # Title case for others
 
 
-# "last active" is year of paper
-
-dat2$last_active <- dat2$PY
 
 # rename "university" -> "org_affil"
 
@@ -148,9 +157,12 @@ dat2 <- dat2 %>%
   arrange(last_name, first_name) %>% 
   mutate(name=paste(last_name, first_name, sep=", ")) %>% 
   mutate(org_affil_2=(paste(org_affil, " (",country,") ",sep=""))) %>% 
-  arrange(desc(PY)) %>% 
+  arrange(desc(last_active)) %>% 
   relocate(c(name,org_affil_2,department,last_active),.before=1) %>% 
-  replace_na(list(org_affil_2="-",department="-"))
+  replace_na(list(org_affil_2="-",department="-")) %>% 
+  select(name:last_active) %>% 
+  rename(org_affil=org_affil_2) %>% 
+  mutate_all(trimws)
 
 
 
